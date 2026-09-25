@@ -1,0 +1,14 @@
+name: Test pipeline helpers
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v7
+        with:
+          version: "0.12.19"
+          python-version: "3.12"
+      - run: uv run --locked python -m unittest discover -s tests -v
