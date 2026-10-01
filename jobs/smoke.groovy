@@ -28,3 +28,22 @@ pipelineJob('pdd/integration-test') {
         }
     }
 }
+
+pipelineJob('pdd/cloth-shop-api-test') {
+    description('ProductService unit test and product search API integration test.')
+    definition {
+        cpsScm {
+            scm {
+                git {
+                    remote {
+                        url(sourceRepo)
+                        if (sourceCredentials) { credentials(sourceCredentials) }
+                    }
+                    branch(sourceBranch)
+                }
+            }
+            scriptPath('pipelines/cloth-shop-api.Jenkinsfile')
+            lightweight(false)
+        }
+    }
+}
