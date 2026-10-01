@@ -3,6 +3,7 @@
 def sourceRepo = PIPELINE_REPO
 def sourceBranch = PIPELINE_BRANCH
 def sourceCredentials = PIPELINE_CREDENTIALS
+def applicationCredentials = APPLICATION_CREDENTIALS
 folder('pdd') {
     displayName('PDD')
     description('Jobs managed by the pipelines repository')
@@ -31,6 +32,9 @@ pipelineJob('pdd/integration-test') {
 
 pipelineJob('pdd/cloth-shop-api-test') {
     description('ProductService unit test and product search API integration test.')
+    parameters {
+        choiceParam('APPLICATION_GIT_CREDENTIALS', [applicationCredentials], 'Managed by Jenkins config: none for public Git, application-git for private Git')
+    }
     definition {
         cpsScm {
             scm {

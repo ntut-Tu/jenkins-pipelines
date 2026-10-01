@@ -15,9 +15,20 @@ pipeline {
         stage('Checkout application') {
             steps {
                 dir('cloth_shop_server') {
-                    checkout([$class: 'GitSCM',
-                        branches: [[name: "*/${env.APPLICATION_BRANCH}"]],
-                        userRemoteConfigs: [[url: env.APPLICATION_REPO]]])
+                    script {
+                        def applicationRemote = [url: env.APPLICATION_REPO]
+                        if (params.APPLICATION_GIT_CREDENTIALS == 'application-git') {
+                            if (!env.APPLICATION_REPO.startsWith('https://')) {
+                                error 'Private application checkout requires HTTPS'
+                            }
+                            applicationRemote.credentialsId = 'application-git'
+                        } else if (params.APPLICATION_GIT_CREDENTIALS != 'none') {
+                            error 'Invalid application Git credential selection'
+                        }
+                        checkout([$class: 'GitSCM',
+                            branches: [[name: "*/${env.APPLICATION_BRANCH}"]],
+                            userRemoteConfigs: [applicationRemote]])
+                    }
                 }
             }
         }
