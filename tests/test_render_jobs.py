@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 import sys
 import tempfile
 import unittest
@@ -36,7 +37,7 @@ class RendererTests(unittest.TestCase):
             self.assertIn("pipelineJob('pdd/fetch-pr-a')", content)
             self.assertIn("choiceParam('BASE_BRANCH', ['main']", content)
             self.assertIn("pipelineJob('pdd/fetch-pr-b')", content)
-            self.assertIn("cron('H/45 * * * *')", content)
+            self.assertIn("spec('H/45 * * * *')", content)
             self.assertIn("choiceParam('MAX_EMPTY_POLLS', ['5']", content)
             self.assertIn("booleanParam('FORCE_RETEST', false", content)
             values.write_text(values.read_text().replace('example/api', 'example/new-api'))
@@ -60,6 +61,27 @@ class RendererTests(unittest.TestCase):
             values.write_text(values.read_text().replace('example/server', "example/server'); queue('evil"))
             with self.assertRaises(ValueError):
                 load_jobs(values)
+
+    def test_rejects_names_owned_by_static_jobs(self):
+        root = Path(__file__).resolve().parents[1]
+        names = []
+        for script in (root / 'jobs').glob('*.groovy'):
+            if script == DEFAULT_OUTPUT:
+                continue
+            names.extend(re.findall(r"pipelineJob\('pdd/([^']+)'\)", script.read_text()))
+        self.assertTrue(names, 'Expected statically defined jobs')
+        with tempfile.TemporaryDirectory() as directory:
+            values = Path(directory) / 'values.yaml'
+            for name in names:
+                with self.subTest(name=name):
+                    values.write_text(
+                        f'fetch_pr_jobs:\n  - name: {name}\n'
+                        '    repository: example/server\n'
+                        '    head_branch: ci\n'
+                        '    test_job: /pdd/test-a\n'
+                    )
+                    with self.assertRaisesRegex(ValueError, 'invalid or duplicated'):
+                        load_jobs(values)
 
     def test_rejects_duplicate_yaml_keys(self):
         with tempfile.TemporaryDirectory() as directory:

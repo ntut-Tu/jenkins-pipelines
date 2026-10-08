@@ -190,7 +190,7 @@ python3 -m unittest discover -s tests -v
 ### Jenkins 手動驗證
 
 1. 將此 repo 的變更提交並發布到 `jenkins-config/settings.local.yaml` 設定的 pipeline repo／分支。
-   需包含 `jobs/java-trace-spike.groovy`、`pipelines/java-trace-spike.Jenkinsfile`、
+   需包含 `jobs/java_trace_spike.groovy`、`pipelines/java-trace-spike.Jenkinsfile`、
    `scripts/trace-spike.sh` 及整個 `tools/java-test-trace/`（不含 target／cache）。
    本次工具操作沒有執行 git push；只有本機檔案時，seed 無法讀到新 Job。
 2. 在 Jenkins 執行既有 `seed` Job，等它 SUCCESS；或從管理機送出 seed：

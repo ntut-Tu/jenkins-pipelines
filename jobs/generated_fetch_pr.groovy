@@ -20,8 +20,14 @@ pipelineJob('pdd/fetch-pr') {
         choiceParam('GITHUB_API_CREDENTIALS', [githubApiCredentials], 'Managed by Jenkins config: github-api or none')
         choiceParam('APPLICATION_GIT_CREDENTIALS', [applicationCredentials], 'Managed by Jenkins config: none or application-git')
     }
-    triggers {
-        cron('H/30 * * * *')
+    properties {
+        pipelineTriggers {
+            triggers {
+                cron {
+                    spec('H/30 * * * *')
+                }
+            }
+        }
     }
     definition {
         cpsScm {

@@ -19,7 +19,7 @@ JOB_PATH = re.compile(r'/[A-Za-z0-9][A-Za-z0-9_.-]*(?:/[A-Za-z0-9][A-Za-z0-9_.-]
 POLL = re.compile(r'[A-Za-z0-9H*/ ,\-]+\Z')
 REQUIRED = {'name', 'repository', 'head_branch', 'test_job'}
 OPTIONAL = {'base_branch', 'poll', 'max_empty_polls'}
-RESERVED_NAMES = {'integration-test', 'cloth-shop-api-test', 'test-all-server'}
+RESERVED_NAMES = {'integration-test', 'cloth-shop-api-test', 'test-all-server', 'java-trace-spike'}
 
 
 class UniqueKeyLoader(yaml.SafeLoader):
@@ -109,8 +109,14 @@ def render(jobs):
             "        choiceParam('GITHUB_API_CREDENTIALS', [githubApiCredentials], 'Managed by Jenkins config: github-api or none')",
             "        choiceParam('APPLICATION_GIT_CREDENTIALS', [applicationCredentials], 'Managed by Jenkins config: none or application-git')",
             '    }',
-            '    triggers {',
-            f"        cron({groovy(job['poll'])})",
+            '    properties {',
+            '        pipelineTriggers {',
+            '            triggers {',
+            '                cron {',
+            f"                    spec({groovy(job['poll'])})",
+            '                }',
+            '            }',
+            '        }',
             '    }',
             '    definition {',
             '        cpsScm {',
