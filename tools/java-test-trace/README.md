@@ -28,3 +28,11 @@ Maven 完成測試、JaCoCo XML 後，由 Java TraceArtifactAssembler 計算 XML
 
 尚未驗證任意 async／Reactor／多 JVM、多 Surefire fork、多 module 與 Spring AOP。
 正式整合須使用實際 PR head、build ID、scope，並在 Jenkins 歸檔 XML 與最終 JSON。
+
+## PR pipeline 自動接入
+
+`test-all-server` 透過 `scripts/prepare_trace_pom.py` 與 `scripts/pr-head-trace.sh`
+自動接入 PR head 測試，傳入真實 SHA／build ID 並歸檔 trace。
+`trace.classes` 指定自動產生的 source top-level class 清單，排除 generated code、代理與測試類別。
+此路徑保留 `complete=false`，限制與部署狀態見根目錄 README。
+原有 spike fixture 繼續使用合成版本，與 PR artifacts 分開。

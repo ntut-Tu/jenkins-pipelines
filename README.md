@@ -50,10 +50,25 @@ API 錯誤、rate limit 冷卻和因最短間隔沿用快取都不增加計數�
 合併衝突或 ref 在排隊期間更新時，該次建置會失敗，不會改用新的 commit。
 測試報告由 JUnit 收集，合併版本資訊封存為 `pr-merge-info.txt`。
 
-### 提供 Agent 的 PR head coverage
+### PR poll 自動產生 PR head coverage 與 trace
 
-`test-all-server` 先 checkout 已驗證的 `HEAD_SHA`，在相同 Maven／Docker 環境執行
-`clean` → JaCoCo `prepare-agent` → `verify` → `report`。
+`fetch-pr` 符合既有 repository／branch 條件且 revision 未處理時，自動排入 `test-all-server`，
+傳入 PR_NUMBER、HEAD_SHA、BASE_SHA、BASE_BRANCH；每個 PR 不需要人工改寫 POM 或 trace 設定。
+`test-all-server` 自動 checkout pipeline 工具與已驗證的 `HEAD_SHA`，在 Jenkins agent 上：
+
+1. `prepare_trace_pom.py` 建立臨時 `.ci-trace-pom.xml`，保留原始 `pom.xml`，
+   加入 test-scope 支援、Surefire JVM agent 參數和 finalizer。
+2. 從 `src/main/java` 自動建立 `com.clothingstore.shop.` 的 top-level class 清單，
+   排除 tests、jOOQ／MapStruct 產生類別與代理；不同 PR 新增的 source class 自動納入。
+3. `pr-head-trace.sh` 在 Maven 容器建置 producer，安裝到該 build 的本地 Maven repository。
+4. 同一次 PR head 測試同時掛載 JaCoCo 與 trace agent，執行 `clean` → `prepare-agent` → `verify` → `report`。
+5. Java finalizer 自動帶入 `HEAD_SHA`、`JOB_NAME/BUILD_NUMBER` 與當次 XML SHA-256，產生最終 trace。
+   shell 結束時移除臨時 POM／class 清單。
+6. Jenkins 封存下列 artifacts，再繼續原有的合併測試。
+
+Python 設定產生器只使用標準函式庫，Java 測試在 `pdd-test` agent 的 Maven 容器執行。
+Controller 的觸發與 LLM 分析依使用者指示留待後續；本次自動流程的終點為 artifacts 封存。
+下方固定 URL 僅供手動 smoke test，並非每個 PR 的必要操作。
 測試範圍由該 PR 的 POM 決定；不額外限制為產品測試，也不宣稱 POM 未配置的測試有執行。
 一般測試 assertion 失敗仍產生報告，JUnit 將 build 標示為 UNSTABLE；編譯、容器或報告產生失敗則標示 FAILURE。
 head 階段完成後，繼續原有的 base＋head 合併與 `clean verify`。
@@ -63,6 +78,7 @@ head 階段會發布自己的 JUnit 報告，並封存：
 
 - `agent-analysis/jacoco.xml`
 - `agent-analysis/coverage-metadata.json`
+- `agent-analysis/java-test-trace.json`
 
 metadata 契約如下，`coverage_sha256` 必須對應同份 XML 的原始 bytes：
 
@@ -77,7 +93,8 @@ metadata 契約如下，`coverage_sha256` 必須對應同份 XML 的原始 bytes
 ```
 
 合併後的測試結果仍供 CI 驗證使用。Agent 讀取上述 **head** 報告，不能把合併後報告標成 head SHA。
-沒有 profiler 時不會產生 per-test trace；JaCoCo XML 本身不提供 test-to-method mapping。
+Trace 來自同次測試 JVM 的 producer；JaCoCo XML 本身不提供 test-to-method mapping。
+Trace 產生失敗會使 head 階段失敗，並保留可取得的 raw observations 作診斷，不宣稱成功。
 
 Agent 的 `values.yaml` 使用同一個固定 build 編號（以下 `<N>` 必須替換）：
 
@@ -85,9 +102,14 @@ Agent 的 `values.yaml` 使用同一個固定 build 編號（以下 `<N>` 必須
 jenkins:
   artifact_url: "http://localhost:18080/job/pdd/job/test-all-server/<N>/artifact/agent-analysis/jacoco.xml"
   metadata_url: "http://localhost:18080/job/pdd/job/test-all-server/<N>/artifact/agent-analysis/coverage-metadata.json"
-  trace_url: null
+  trace_url: "http://localhost:18080/job/pdd/job/test-all-server/<N>/artifact/agent-analysis/java-test-trace.json"
   # username / api_token 沿用既有設定
 ```
+
+目前 trace 接入範圍為此 repo 的單一 Maven module、Surefire／JUnit Platform、一個 fork，
+與同 JVM 同步 servlet HTTP。`complete=false`；不追蹤任意 async、nested class 或 generated code。
+遇到 multi-module、POM profiles、Failsafe 或既有 Surefire argLine 會明確失敗，避免靜默覆寫未知測試設定。
+這是目前接入範圍，不要求每個正常 PR 手動設定。
 
 避免使用 `lastSuccessfulBuild`：有 assertion 失敗的 UNSTABLE build 也可能具有有效 coverage。
 固定 build 編號同時避免 latest 指標在兩次下載之間變動。
@@ -226,7 +248,7 @@ Jenkins SUCCESS 代表 Java fixture／finalizer 通過；完整五項驗收還�
 `trace-spike-source-revision.txt` 記錄實際 checkout 的 producer commit。
 JSON 目前保留合成 fixture 的零 revision 與 `local-java-trace-spike` 標記，
 即使在 Jenkins 執行，也不是 PR 的證據，不得填入 PR #31 的 `trace_url`。
-正式 PR pipeline 尚未掛載 trace agent。
+正式 PR pipeline 已新增自動接入程式；仍需發布 pipeline 來源，並由新 Jenkins build 驗證。
 
 `./scripts/trace-spike.sh` 是 Jenkinsfile 呼叫的建置入口；開發者也能在 JDK 17 環境
 執行它，但本機成功不代表 Jenkins agent 驗證完成。
