@@ -53,7 +53,7 @@ pipelineJob('pdd/cloth-shop-api-test') {
 }
 
 pipelineJob('pdd/test-all-server') {
-    description('Run the full cloth_shop_server verification on an exact PR merge.')
+    description('Publish exact PR head coverage for Agent, then verify the exact PR merge.')
     parameters {
         stringParam('PR_NUMBER', '', 'GitHub PR number')
         stringParam('HEAD_SHA', '', 'Exact PR head commit')

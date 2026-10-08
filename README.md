@@ -48,6 +48,53 @@ API 錯誤、rate limit 冷卻和因最短間隔沿用快取都不增加計數�
 測試會執行 PR 內的 Maven Wrapper 與程式碼，因此此 Job 應只供可信的同 repo 寫入者使用。
 合併衝突或 ref 在排隊期間更新時，該次建置會失敗，不會改用新的 commit。
 測試報告由 JUnit 收集，合併版本資訊封存為 `pr-merge-info.txt`。
+
+### 提供 Agent 的 PR head coverage
+
+`test-all-server` 先 checkout 已驗證的 `HEAD_SHA`，在相同 Maven／Docker 環境執行
+`clean` → JaCoCo `prepare-agent` → `verify` → `report`。
+測試範圍由該 PR 的 POM 決定；不額外限制為產品測試，也不宣稱 POM 未配置的測試有執行。
+一般測試 assertion 失敗仍產生報告，JUnit 將 build 標示為 UNSTABLE；編譯、容器或報告產生失敗則標示 FAILURE。
+head 階段完成後，繼續原有的 base＋head 合併與 `clean verify`。
+兩次測試需要額外時間，因此 job timeout 調整為 80 分鐘。
+
+head 階段會發布自己的 JUnit 報告，並封存：
+
+- `agent-analysis/jacoco.xml`
+- `agent-analysis/coverage-metadata.json`
+
+metadata 契約如下，`coverage_sha256` 必須對應同份 XML 的原始 bytes：
+
+```json
+{
+  "schema_version": 1,
+  "revision": "<實際測試的 PR head 完整 SHA>",
+  "coverage_sha256": "<XML SHA-256，64 位小寫十六進位>",
+  "build_id": "pdd/test-all-server/<build number>",
+  "scope": "PR head; Maven clean verify; tests selected by project POM; test failures retained in JUnit"
+}
+```
+
+合併後的測試結果仍供 CI 驗證使用。Agent 讀取上述 **head** 報告，不能把合併後報告標成 head SHA。
+沒有 profiler 時不會產生 per-test trace；JaCoCo XML 本身不提供 test-to-method mapping。
+
+Agent 的 `values.yaml` 使用同一個固定 build 編號（以下 `<N>` 必須替換）：
+
+```yaml
+jenkins:
+  artifact_url: "http://localhost:18080/job/pdd/job/test-all-server/<N>/artifact/agent-analysis/jacoco.xml"
+  metadata_url: "http://localhost:18080/job/pdd/job/test-all-server/<N>/artifact/agent-analysis/coverage-metadata.json"
+  trace_url: null
+  # username / api_token 沿用既有設定
+```
+
+避免使用 `lastSuccessfulBuild`：有 assertion 失敗的 UNSTABLE build 也可能具有有效 coverage。
+固定 build 編號同時避免 latest 指標在兩次下載之間變動。
+Agent 會拒絕 SHA 不符或 XML digest 不符的資料；缺少 provenance 也不會進行行號比對。
+`cloth-shop-api-test` 的 `jenkins-test` 分支報告僅供該分支測試使用，不能直接作為任意 PR 的證據。
+
+本機修改必須先進入 Jenkins 所設定的 pipeline repo／分支，執行新 build 後才會出現 artifacts；
+修改本機 Jenkinsfile 不會改變既有 build。
 輪詢 Job 在成功排入測試後記錄該版本，避免下次輪詢重複排入。
 
 輪詢使用 GitHub REST `GET /repos/{owner}/{repo}/pulls`，以 `head` 和 `base` 限定分支，
