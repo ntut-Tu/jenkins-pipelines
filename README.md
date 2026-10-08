@@ -7,6 +7,7 @@
 
 | Jenkins 工作 | 用途 |
 | --- | --- |
+| `pdd/java-trace-spike` | 在 `pdd-test` agent 的 Maven 容器執行 Java trace fixture，封存 JUnit、coverage、trace |
 | `pdd/integration-test` | 示範成功、測試失敗與建置失敗的結果，並顯示 JUnit 報告 |
 | `pdd/cloth-shop-api-test` | 執行 `cloth_shop_server` 的產品服務單元測試與搜尋 API 整合測試 |
 | `pdd/fetch-pr` | 由 `value.yaml` 產生的範例：主動查詢 `cloth_shop_server` PR，符合分支規則時排入測試 |
@@ -181,3 +182,51 @@ fetch_pr_jobs:
 ```bash
 python3 -m unittest discover -s tests -v
 ```
+
+## Java trace producer spike
+
+測試側 Java producer 位於 [tools/java-test-trace](tools/java-test-trace/README.md)，
+由 Jenkins agent／sandbox 的測試 JVM 載入；LLM Agent 僅下載與解析 artifacts。
+### Jenkins 手動驗證
+
+1. 將此 repo 的變更提交並發布到 `jenkins-config/settings.local.yaml` 設定的 pipeline repo／分支。
+   需包含 `jobs/java-trace-spike.groovy`、`pipelines/java-trace-spike.Jenkinsfile`、
+   `scripts/trace-spike.sh` 及整個 `tools/java-test-trace/`（不含 target／cache）。
+   本次工具操作沒有執行 git push；只有本機檔案時，seed 無法讀到新 Job。
+2. 在 Jenkins 執行既有 `seed` Job，等它 SUCCESS；或從管理機送出 seed：
+
+   ```bash
+   cd /home/mo/Documents/PDD/jenkins-config
+   uv run --locked python -m jenkins_config seed
+   ```
+
+   此命令只排入 seed，必須再確認 Jenkins 的 seed 建置結果。
+3. 開啟 `pdd/java-trace-spike` → **Build Now**。
+4. 在 **Console Output** 確認節點屬於 `pdd-test`，且出現
+   `Run Java trace fixture`、Maven 容器與 `Tests run: 3, Failures: 0, Errors: 0, Skipped: 0`。
+   測試 JVM 在 Jenkins agent 啟動的 Maven 容器內執行。
+5. 在該次建置 **Test Result** 確認三個測試通過；在 **Artifacts** 檢查
+   `tools/java-test-trace/spike-fixture/target/` 下的：
+   - `trace-observations.json`：`diagnostics.agent_attached` 為 true、`diagnostics.errors` 為空。
+   - `java-test-trace.json`：三筆測試；`directMethod` 呼叫 int overload；
+     `firstRequest`／`secondRequest` 分別只對應各自的 Controller 與 Service 路徑；
+     `background` 不出現在 calls。
+   - `site/jacoco/jacoco.xml`：與 trace 同次產生的 coverage。
+
+Job 同時封存 fixture source，可下載此 build 的全部 artifacts 並保留目錄結構，
+在 Python Agent 專案執行唯讀 consumer 檢查：
+
+```bash
+./scripts/verify-trace-spike.sh /下載解壓路徑/tools/java-test-trace/spike-fixture
+```
+
+此 consumer 命令不執行 Java；用於檢查 XML hash、source mapping、並行隔離及契約。
+Jenkins SUCCESS 代表 Java fixture／finalizer 通過；完整五項驗收還包含 consumer 檢查。
+
+`trace-spike-source-revision.txt` 記錄實際 checkout 的 producer commit。
+JSON 目前保留合成 fixture 的零 revision 與 `local-java-trace-spike` 標記，
+即使在 Jenkins 執行，也不是 PR 的證據，不得填入 PR #31 的 `trace_url`。
+正式 PR pipeline 尚未掛載 trace agent。
+
+`./scripts/trace-spike.sh` 是 Jenkinsfile 呼叫的建置入口；開發者也能在 JDK 17 環境
+執行它，但本機成功不代表 Jenkins agent 驗證完成。

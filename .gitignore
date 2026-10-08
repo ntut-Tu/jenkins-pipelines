@@ -2,3 +2,7 @@ __pycache__/
 reports/
 .venv/
 /.idea/
+
+/tools/java-test-trace/**/target/
+
+/.cache/
