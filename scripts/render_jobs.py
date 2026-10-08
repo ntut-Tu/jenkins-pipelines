@@ -105,6 +105,7 @@ def render(jobs):
             f"        choiceParam('POLL', [{groovy(job['poll'])}], 'Jenkins cron schedule')",
             f"        choiceParam('MAX_EMPTY_POLLS', [{groovy(str(job['max_empty_polls']))}], 'Stop automatic polling after this many consecutive polls without a matching PR')",
             "        booleanParam('RESET_POLLING', false, 'Reset the empty poll counter and resume automatic polling')",
+            "        booleanParam('FORCE_RETEST', false, 'Queue tests again for matching PRs even if their revision was already dispatched')",
             "        choiceParam('GITHUB_API_CREDENTIALS', [githubApiCredentials], 'Managed by Jenkins config: github-api or none')",
             "        choiceParam('APPLICATION_GIT_CREDENTIALS', [applicationCredentials], 'Managed by Jenkins config: none or application-git')",
             '    }',

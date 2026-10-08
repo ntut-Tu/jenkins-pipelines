@@ -13,7 +13,9 @@ pipeline {
                 script {
                     def fetch = {
                         docker.image('python:3.12.12-slim-bookworm').inside('-u 1000:1000') {
-                            sh '''if [ "$RESET_POLLING" = true ]; then set -- --reset-polling; else set --; fi
+                            sh '''set --
+if [ "$RESET_POLLING" = true ]; then set -- "$@" --reset-polling; fi
+if [ "$FORCE_RETEST" = true ]; then set -- "$@" --force-retest; fi
 python3 scripts/fetch_github_prs.py --owner "$OWNER" --repository "$REPOSITORY" --head-branch "$HEAD_BRANCH" --base-branch "$BASE_BRANCH" --state .github-pr-cache.json --output github-prs.json --dispatch-state .github-pr-dispatched.tsv --candidates github-pr-candidates.tsv --max-empty-polls "$MAX_EMPTY_POLLS" --status github-pr-poll-status.json "$@"'''
                         }
                     }
@@ -78,6 +80,7 @@ python3 scripts/fetch_github_prs.py --owner "$OWNER" --repository "$REPOSITORY" 
                         choice(name: 'POLL', choices: [params.POLL], description: 'Jenkins cron schedule'),
                         choice(name: 'MAX_EMPTY_POLLS', choices: [params.MAX_EMPTY_POLLS], description: 'Maximum consecutive empty polls'),
                         booleanParam(name: 'RESET_POLLING', defaultValue: false, description: 'Reset counter and resume automatic polling'),
+                        booleanParam(name: 'FORCE_RETEST', defaultValue: false, description: 'Queue tests again for matching PRs even if their revision was already dispatched'),
                         choice(name: 'GITHUB_API_CREDENTIALS', choices: [params.GITHUB_API_CREDENTIALS], description: 'Managed GitHub credential'),
                         choice(name: 'APPLICATION_GIT_CREDENTIALS', choices: [params.APPLICATION_GIT_CREDENTIALS], description: 'Managed application Git credential')
                     ]),

@@ -114,6 +114,19 @@ class FetchTests(unittest.TestCase):
             dispatch_state=dispatched, candidates_path=candidates)
         self.assertEqual(candidates.read_text().splitlines()[0].split('\t')[2], '2')
 
+    def test_force_retest_queues_an_already_dispatched_revision(self):
+        dispatched = Path(self.tmp.name) / 'dispatched.tsv'
+        candidates = Path(self.tmp.name) / 'candidates.tsv'
+        dispatched.write_text('ntut-Tu\tcloth_shop_server\t1\t' + 'a' * 40 + '\t' + 'b' * 40 + '\n')
+        run('ntut-Tu', 'cloth_shop_server', self.state, self.output,
+            opener=FakeOpener([Response([pr(1)], {})]),
+            dispatch_state=dispatched, candidates_path=candidates)
+        self.assertEqual(candidates.read_text(), '')
+        run('ntut-Tu', 'cloth_shop_server', self.state, self.output,
+            opener=FakeOpener([]), dispatch_state=dispatched, candidates_path=candidates,
+            force_retest=True)
+        self.assertTrue(candidates.read_text().startswith('ntut-Tu\tcloth_shop_server\t1\t'))
+
     def test_other_branch_and_fork_are_not_dispatched(self):
         dispatched = Path(self.tmp.name) / 'dispatched.tsv'
         candidates = Path(self.tmp.name) / 'candidates.tsv'

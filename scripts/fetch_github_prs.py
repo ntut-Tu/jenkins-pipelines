@@ -202,7 +202,7 @@ def write_lines(path, lines):
 
 def run(owner, repository, state_path, output_path, token=None, opener=None, *, head_branch='jenkins-testing',
         base_branch='main', dispatch_state=None, candidates_path=None, max_empty_polls=5,
-        status_path=None, reset_polling=False):
+        status_path=None, reset_polling=False, force_retest=False):
     if not IDENTIFIER.fullmatch(owner) or not IDENTIFIER.fullmatch(repository):
         raise ValueError('Invalid GitHub repository owner or name')
     if type(max_empty_polls) is not int or max_empty_polls < 1:
@@ -264,11 +264,11 @@ def run(owner, repository, state_path, output_path, token=None, opener=None, *, 
         for item in entry['open_pull_requests']:
             key = (owner, repository, str(item['number']))
             signature = (item['head_sha'], item['base_sha'])
-            if item in matching and dispatched.get(key) != signature and not watch['stopped']:
+            if item in matching and (force_retest or dispatched.get(key) != signature) and not watch['stopped']:
                 candidates.append((*key, *signature, base_branch))
         write_lines(dispatch_state, [(*key, *value) for key, value in dispatched.items()])
         write_lines(candidates_path, candidates)
-        print(f'{len(candidates)} matching PR revisions require tests')
+        print(f'{len(candidates)} matching PR revisions require tests' + (' (force retest)' if force_retest else ''))
     for entry in result['repositories']:
         print(f'{entry["repository"]}: {len(entry["open_pull_requests"])} open PRs')
     return result
@@ -287,6 +287,7 @@ def main():
     parser.add_argument('--max-empty-polls', type=int, default=5)
     parser.add_argument('--status', type=Path, required=True)
     parser.add_argument('--reset-polling', action='store_true')
+    parser.add_argument('--force-retest', action='store_true')
     arguments = parser.parse_args()
     for name in ('head_branch', 'base_branch'):
         value = getattr(arguments, name)
@@ -296,7 +297,7 @@ def main():
         head_branch=arguments.head_branch, base_branch=arguments.base_branch,
         dispatch_state=arguments.dispatch_state, candidates_path=arguments.candidates,
         max_empty_polls=arguments.max_empty_polls, status_path=arguments.status,
-        reset_polling=arguments.reset_polling)
+        reset_polling=arguments.reset_polling, force_retest=arguments.force_retest)
 
 
 if __name__ == '__main__':

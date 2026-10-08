@@ -38,6 +38,7 @@ class RendererTests(unittest.TestCase):
             self.assertIn("pipelineJob('pdd/fetch-pr-b')", content)
             self.assertIn("cron('H/45 * * * *')", content)
             self.assertIn("choiceParam('MAX_EMPTY_POLLS', ['5']", content)
+            self.assertIn("booleanParam('FORCE_RETEST', false", content)
             values.write_text(values.read_text().replace('example/api', 'example/new-api'))
             self.assertEqual(main(['--values', str(values), '--output', str(output), '--check']), 1)
 

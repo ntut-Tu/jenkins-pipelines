@@ -33,6 +33,8 @@ API 錯誤、rate limit 冷卻和因最短間隔沿用快取都不增加計數�
 下一次建置會依保存的計數狀態再次移除。計數保存在 Job workspace 的 `.github-pr-cache.json`。
 目前的 `value.yaml` 只處理 `cloth_shop_server` 中 `range-filtering → main` 的開啟中 PR。
 同一 PR 的 head SHA 或 base SHA 更新後，會再次排入設定的測試 Job。
+若測試 Job 失敗但 PR 的 SHA 沒變，手動執行 `fetch-pr` 時勾選 `FORCE_RETEST`，
+即可對目前符合規則的 PR 再排一次測試；一般輪詢仍只排入新版本。
 只接受來源分支位於同一個 repo 的 PR，fork PR 不會自動執行。
 符合來源與目標分支的 PR 清單封存在 `github-prs.json`，包含 PR 編號、連結、標題、head/base SHA 與分支。
 
