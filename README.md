@@ -61,6 +61,8 @@ workspace 被清理時，下次會完整重抓並重新排入目前符合條件�
 若不設定 token，仍可查詢，但共用未認證的較低 API 額度，且 `304` 不享有已認證請求的免額度待遇。
 多個 Job 共用同一 token 的 GitHub 額度；依需求調整各自 `poll`，避免所有 repo 頻繁輪詢。
 不要將 token 填在 Jenkins Job 參數。
+若目前的 seed 尚未提供 `GITHUB_API_CREDENTIALS`，產生的 Job 會先使用 `none`；
+要啟用已認證查詢，仍需部署提供該參數與憑證的 `jenkins-config` 設定。
 
 ## 新增 fetch PR Job
 

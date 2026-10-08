@@ -3,7 +3,7 @@ def sourceRepo = PIPELINE_REPO
 def sourceBranch = PIPELINE_BRANCH
 def sourceCredentials = PIPELINE_CREDENTIALS
 def applicationCredentials = APPLICATION_CREDENTIALS
-def githubApiCredentials = GITHUB_API_CREDENTIALS
+def githubApiCredentials = binding.hasVariable('GITHUB_API_CREDENTIALS') ? GITHUB_API_CREDENTIALS : 'none'
 
 pipelineJob('pdd/fetch-pr') {
     description('Poll open GitHub PRs for ntut-Tu/cloth_shop_server and queue matching tests.')

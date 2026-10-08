@@ -88,7 +88,7 @@ def render(jobs):
         'def sourceBranch = PIPELINE_BRANCH',
         'def sourceCredentials = PIPELINE_CREDENTIALS',
         'def applicationCredentials = APPLICATION_CREDENTIALS',
-        'def githubApiCredentials = GITHUB_API_CREDENTIALS',
+        "def githubApiCredentials = binding.hasVariable('GITHUB_API_CREDENTIALS') ? GITHUB_API_CREDENTIALS : 'none'",
         '',
     ]
     for job in jobs:
