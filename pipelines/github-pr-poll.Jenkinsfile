@@ -50,9 +50,9 @@ python3 scripts/fetch_github_prs.py --owner "$OWNER" --repository "$REPOSITORY" 
                                 string(name: 'BASE_BRANCH', value: fields[5]),
                                 string(name: 'APPLICATION_GIT_CREDENTIALS', value: params.APPLICATION_GIT_CREDENTIALS)
                             ]
-                        dispatched += fields.take(5).join('\t') + '\n'
+                        dispatched += "${fields[0]}\t${fields[1]}\t${fields[2]}\t${fields[3]}\t${fields[4]}\n"
                         writeFile file: '.github-pr-dispatched.tsv', text: dispatched
-                        echo "Queued ${fields[0]}/${fields[1]} PR #${fields[2]} at ${fields[3].take(12)}"
+                        echo "Queued ${fields[0]}/${fields[1]} PR #${fields[2]} at ${fields[3]}"
                     }
                 }
             }
