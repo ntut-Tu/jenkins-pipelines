@@ -17,7 +17,7 @@ pipeline {
                     if (!(params.PR_NUMBER ==~ /^[1-9][0-9]*$/)
                             || !(params.HEAD_SHA ==~ /^[a-f0-9]{40}$/)
                             || !(params.BASE_SHA ==~ /^[a-f0-9]{40}$/)
-                            || !(params.BASE_BRANCH ==~ /^[A-Za-z0-9_][A-Za-z0-9_./-]*$/)
+                            || !(params.BASE_BRANCH ==~ '^[A-Za-z0-9_][A-Za-z0-9_./-]*$')
                             || params.BASE_BRANCH.contains('..') || params.BASE_BRANCH.endsWith('/')) {
                         error 'Invalid PR revision parameters'
                     }
