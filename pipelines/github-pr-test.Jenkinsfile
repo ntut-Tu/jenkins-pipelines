@@ -68,8 +68,9 @@ pipeline {
                     }
                     withEnv(["HOME=${pwd()}", 'TESTCONTAINERS_HOST_OVERRIDE=host.docker.internal']) {
                         docker.image('maven:3.9.9-eclipse-temurin-17-noble').inside(
-                                "-u 1000:1000 --group-add ${socketGroup} -v /var/run/docker.sock:/var/run/docker.sock --add-host host.docker.internal:host-gateway") {
+                                "-u 1000:1000 --group-add ${socketGroup} -v /var/run/docker.sock:/var/run/docker.sock") {
                             dir('application') {
+                                sh 'getent hosts host.docker.internal'
                                 sh 'sh ./mvnw -B -ntp clean verify'
                             }
                         }

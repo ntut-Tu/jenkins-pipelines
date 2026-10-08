@@ -41,6 +41,8 @@ API 錯誤、rate limit 冷卻和因最短間隔沿用快取都不增加計數�
 `pdd/test-all-server` 會用固定的 PR head SHA 與 base SHA 驗證抓取到的 ref，
 在本地將 head 合併到 base，再於 JDK 17／Maven 容器執行 `sh ./mvnw -B -ntp clean verify`。
 容器透過現有 Docker socket 執行 server 測試所需的 Testcontainers。
+在 Docker Desktop 上，Maven 容器使用內建的 `host.docker.internal` 連到 Testcontainers 發布的埠；
+不要用 `--add-host host.docker.internal:host-gateway` 覆寫此名稱。
 測試會執行 PR 內的 Maven Wrapper 與程式碼，因此此 Job 應只供可信的同 repo 寫入者使用。
 合併衝突或 ref 在排隊期間更新時，該次建置會失敗，不會改用新的 commit。
 測試報告由 JUnit 收集，合併版本資訊封存為 `pr-merge-info.txt`。
