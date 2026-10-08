@@ -31,7 +31,7 @@ http://localhost:18080/job/pdd/job/cloth-shop-api-test/lastSuccessfulBuild/artif
 API 錯誤、rate limit 冷卻和因最短間隔沿用快取都不增加計數。
 停止後仍可手動勾選 `RESET_POLLING` 執行，清除計數並恢復 cron；重新執行 seed 也可能重設 Job 的 cron，
 下一次建置會依保存的計數狀態再次移除。計數保存在 Job workspace 的 `.github-pr-cache.json`。
-範例設定只處理 `cloth_shop_server` 中 `jenkins-testing → main` 的開啟中 PR。
+目前的 `value.yaml` 只處理 `cloth_shop_server` 中 `range-filtering → main` 的開啟中 PR。
 同一 PR 的 head SHA 或 base SHA 更新後，會再次排入設定的測試 Job。
 只接受來源分支位於同一個 repo 的 PR，fork PR 不會自動執行。
 符合來源與目標分支的 PR 清單封存在 `github-prs.json`，包含 PR 編號、連結、標題、head/base SHA 與分支。
@@ -87,7 +87,7 @@ fetch_pr_jobs:
 ./render-jobs.sh --check
 ```
 
-產物為 [jobs/generated-fetch-pr.groovy](jobs/generated-fetch-pr.groovy)，由既有 seed 的
+產物為 [jobs/generated_fetch_pr.groovy](jobs/generated_fetch_pr.groovy)，由既有 seed 的
 `jobs/**/*.groovy` 規則載入。將 `value.yaml` 與產物一起送到配置的 pipeline repo 分支，
 再執行 `jenkins-config` 的 `uv run --locked python -m jenkins_config seed`。
 

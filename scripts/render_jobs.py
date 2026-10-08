@@ -11,7 +11,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_VALUES = ROOT / 'value.yaml'
-DEFAULT_OUTPUT = ROOT / 'jobs' / 'generated-fetch-pr.groovy'
+DEFAULT_OUTPUT = ROOT / 'jobs' / 'generated_fetch_pr.groovy'
 NAME = re.compile(r'[A-Za-z0-9][A-Za-z0-9_.-]*\Z')
 BRANCH = re.compile(r'[A-Za-z0-9_][A-Za-z0-9_./-]*\Z')
 REPOSITORY = re.compile(r'([A-Za-z0-9][A-Za-z0-9_.-]*)/([A-Za-z0-9][A-Za-z0-9_.-]*)\Z')

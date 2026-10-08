@@ -9,6 +9,7 @@ from render_jobs import DEFAULT_OUTPUT, DEFAULT_VALUES, load_jobs, main, render
 
 class RendererTests(unittest.TestCase):
     def test_checked_in_dsl_matches_values(self):
+        self.assertRegex(DEFAULT_OUTPUT.name, r'^[A-Za-z_][A-Za-z0-9_]*\.groovy$')
         self.assertEqual(DEFAULT_OUTPUT.read_text(), render(load_jobs(DEFAULT_VALUES)))
 
     def test_multiple_jobs_and_defaults(self):

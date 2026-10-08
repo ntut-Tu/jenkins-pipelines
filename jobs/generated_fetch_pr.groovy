@@ -10,7 +10,7 @@ pipelineJob('pdd/fetch-pr') {
     parameters {
         choiceParam('OWNER', ['ntut-Tu'], 'Configured GitHub owner')
         choiceParam('REPOSITORY', ['cloth_shop_server'], 'Configured GitHub repository')
-        choiceParam('HEAD_BRANCH', ['jenkins-testing'], 'PR source branch')
+        choiceParam('HEAD_BRANCH', ['range-filtering'], 'PR source branch')
         choiceParam('BASE_BRANCH', ['main'], 'PR target branch')
         choiceParam('TEST_JOB', ['/pdd/test-all-server'], 'Downstream Jenkins test job')
         choiceParam('POLL', ['H/30 * * * *'], 'Jenkins cron schedule')
