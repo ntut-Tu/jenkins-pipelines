@@ -112,6 +112,21 @@ pipeline {
                 }
             }
         }
+        stage('Submit Agent analysis') {
+            when { expression { fileExists('agent-analysis/java-test-trace.json') } }
+            steps {
+                catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE', catchInterruptions: false) {
+                    withCredentials([string(credentialsId: 'test-agent-api-token', variable: 'AGENT_API_TOKEN')]) {
+                        script {
+                            docker.image('python:3.12.12-slim-bookworm').inside('-u 1000:1000') {
+                                sh 'python3 pipeline-tools/scripts/submit_agent_analysis.py'
+                            }
+                        }
+                    }
+                    archiveArtifacts artifacts: 'agent-analysis/controller-receipt.json', allowEmptyArchive: false
+                }
+            }
+        }
         stage('Merge exact revision') {
             steps {
                 dir('application') {

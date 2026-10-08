@@ -55,6 +55,7 @@ pipelineJob('pdd/cloth-shop-api-test') {
 pipelineJob('pdd/test-all-server') {
     description('Publish exact PR head coverage for Agent, then verify the exact PR merge.')
     parameters {
+        stringParam('AGENT_API_URL', 'http://host.docker.internal:18487/test-agent', 'Agent controller via shared Traefik; configure once for this deployment')
         stringParam('PR_NUMBER', '', 'GitHub PR number')
         stringParam('HEAD_SHA', '', 'Exact PR head commit')
         stringParam('BASE_SHA', '', 'Exact target branch commit')
