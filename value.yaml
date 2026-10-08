@@ -1,0 +1,9 @@
+# 新增一筆 fetch_pr_jobs 後，執行 ./render-jobs.sh，再提交產生的 Job DSL。
+fetch_pr_jobs:
+  - name: fetch-pr
+    repository: ntut-Tu/cloth_shop_server
+    head_branch: range-filtering
+    base_branch: main
+    test_job: /pdd/test-all-server
+    poll: 'H/30 * * * *'
+    max_empty_polls: 5

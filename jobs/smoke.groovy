@@ -51,3 +51,29 @@ pipelineJob('pdd/cloth-shop-api-test') {
         }
     }
 }
+
+pipelineJob('pdd/test-all-server') {
+    description('Run the full cloth_shop_server verification on an exact PR merge.')
+    parameters {
+        stringParam('PR_NUMBER', '', 'GitHub PR number')
+        stringParam('HEAD_SHA', '', 'Exact PR head commit')
+        stringParam('BASE_SHA', '', 'Exact target branch commit')
+        stringParam('BASE_BRANCH', 'main', 'Target branch ref')
+        choiceParam('APPLICATION_GIT_CREDENTIALS', [applicationCredentials], 'Managed by Jenkins config: none or application-git')
+    }
+    definition {
+        cpsScm {
+            scm {
+                git {
+                    remote {
+                        url(sourceRepo)
+                        if (sourceCredentials) { credentials(sourceCredentials) }
+                    }
+                    branch(sourceBranch)
+                }
+            }
+            scriptPath('pipelines/github-pr-test.Jenkinsfile')
+            lightweight(false)
+        }
+    }
+}

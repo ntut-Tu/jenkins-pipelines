@@ -35,7 +35,7 @@ pipeline {
         stage('Product unit and API tests') {
             steps {
                 dir('cloth_shop_server') {
-                    sh 'sh ./mvnw -B -ntp -Dtest=ProductServiceTest,ProductApiIntegrationTest test'
+                    sh 'sh ./mvnw -B -ntp -Dtest=ProductServiceTest,ProductApiIntegrationTest -Dmaven.test.failure.ignore=true org.jacoco:jacoco-maven-plugin:0.8.15:prepare-agent test org.jacoco:jacoco-maven-plugin:0.8.15:report'
                 }
             }
         }
@@ -43,6 +43,7 @@ pipeline {
     post {
         always {
             junit testResults: 'cloth_shop_server/target/surefire-reports/TEST-*.xml', allowEmptyResults: false
+            archiveArtifacts artifacts: 'cloth_shop_server/target/site/jacoco/jacoco.xml', allowEmptyArchive: false
         }
         cleanup { deleteDir() }
     }
