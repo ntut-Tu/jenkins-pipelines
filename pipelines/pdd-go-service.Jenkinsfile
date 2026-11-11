@@ -26,7 +26,7 @@ pipeline {
                     userRemoteConfigs: [[
                         name: 'origin',
                         url: env.gitlabTargetRepoHttpUrl,
-                        credentialsId: 'application-git',
+                        credentialsId: 'gitlab-git',
                         refspec: "+refs/heads/${env.gitlabTargetBranch}:refs/remotes/origin/${env.gitlabTargetBranch} " +
                                  "+refs/merge-requests/${env.gitlabMergeRequestIid}/head:refs/remotes/origin/merge-requests/${env.gitlabMergeRequestIid}"
                     ]],
