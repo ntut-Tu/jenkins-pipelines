@@ -1,7 +1,9 @@
 def repo = PIPELINE_REPO
 def branchName = PIPELINE_BRANCH
 def credentialsId = PIPELINE_CREDENTIALS
-
+def webhookSecret = binding.hasVariable('gitlabWebhookSecret')
+        ? binding.getVariable('gitlabWebhookSecret')
+        : ''
 pipelineJob('pdd/go-service') {
     description('Go service MR quality check')
     triggers {
@@ -24,7 +26,7 @@ pipelineJob('pdd/go-service') {
             skipWorkInProgressMergeRequest(true)
 
             // Webhook authentication
-            secretToken(System.getenv('GITLAB_WEBHOOK_SECRET'))
+            secretToken(webhookSecret)
         }
     }
     definition {
