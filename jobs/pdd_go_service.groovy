@@ -23,10 +23,6 @@ pipelineJob('pdd/go-service') {
             // Skip draft / WIP merge requests
             skipWorkInProgressMergeRequest(true)
 
-            // Cancel outdated builds when MR is updated
-            cancelPendingBuildsOnUpdate(true)
-            cancelRunningBuildsOnUpdate(true)
-
             // Webhook authentication
             secretToken(System.getenv('GITLAB_WEBHOOK_SECRET'))
         }
