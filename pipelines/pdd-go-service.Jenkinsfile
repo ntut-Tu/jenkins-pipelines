@@ -6,11 +6,13 @@ pipeline {
     options {
         timestamps()
         disableConcurrentBuilds()
+        gitLabConnection('gitlab')
+                    gitlabBuilds(builds: ['go-test', 'go-build'])
     }
 
     stages {
         stage('Checkout MR') {
-            steps {
+            steps gitlabCommitStatus('Checkout MR'){
                 checkout scm
 
                 sh '''
@@ -20,7 +22,7 @@ pipeline {
         }
 
         stage('Go Test & Coverage') {
-            steps {
+            steps gitlabCommitStatus('Go Test & Coverage'){
                 sh '''
                     go test -coverprofile=coverage.out ./...
                 '''
@@ -28,7 +30,7 @@ pipeline {
         }
 
         stage('Convert Coverage') {
-            steps {
+            steps gitlabCommitStatus('Convert Coverage'){
 
                 sh '''
                     gocover-cobertura \
@@ -38,7 +40,7 @@ pipeline {
         }
 
         stage('Diff Coverage Gate') {
-            steps {
+            steps gitlabCommitStatus('Diff Coverage Gate'){
                 sh '''
                     diff-cover coverage.xml \
                       --compare-branch=origin/master \
